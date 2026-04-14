@@ -9,36 +9,17 @@ st.markdown("---")
 # 2. Setup API
 API_KEY = "AiZaSyCXEjc-Ca0T_kw4d05vrWMIJdG4JJGE7XI"
 genai.configure(api_key=API_KEY)
-model = genai.GenerativeModel('gemini-1.5-flash')
 
-# 3. Bank Data (Context) - Di sinilah "Otak" chatbot kamu berada
-context = """
-Kamu adalah 'KruiBot', asisten digital resmi Kabupaten Pesisir Barat, Lampung. 
-Tugasmu adalah memberikan informasi yang akurat, ramah, dan mempromosikan pariwisata serta layanan publik.
-
-DATA PENTING PESISIR BARAT:
-- Ibu Kota: Pasar Krui.
-- Wisata Pantai: Pantai Tanjung Setia (Terkenal untuk Surfing dunia), Pantai Labuhan Jukung (Sunset), Pantai Mandiri.
-- Wisata Alam: Pulau Pisang (Lumba-lumba & Kain Tapis), Gua Matu (Wisata Religi/Mistik), TNBBS (Taman Nasional).
-- Budaya & Oleh-oleh: Kain Tapis, Kerajinan Damar, Ikan Blue Marlin (Tuhuk).
-- Makanan Khas: Taboh Ikan, Pandap, Sambol Seruit.
-- Event Utama: WSL World Surf League (Krui Pro) yang biasanya diadakan setiap pertengahan tahun.
-- Kantor Penting: Komplek Perkantoran Padang Haluan (Pusat Pemerintahan).
-
-ATURAN MENJAWAB:
-- Gunakan bahasa Indonesia yang sopan dan sedikit santai (seperti warga lokal yang ramah).
-- Jika ada pertanyaan yang tidak kamu ketahui datanya, arahkan warga untuk datang ke kantor dinas terkait di Komplek Perkantoran Padang Haluan.
-- Selalu promosikan slogan 'Pesisir Barat, Negeri Para Sai Batin dan Para Ulama'.
-"""
-
-# 4. Logika Chat
+# 3. Inisialisasi Model & Riwayat Chat
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
+# Tampilkan chat lama
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
+# 4. Input User
 if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
@@ -46,11 +27,25 @@ if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
 
     with st.chat_message("assistant"):
         try:
-            # Menggabungkan Context dan Pertanyaan User
-            full_prompt = f"{context}\n\nPertanyaan Pengguna: {prompt}"
-            response = model.generate_content(full_prompt)
+            # Kita pakai cara yang lebih stabil
+            model = genai.GenerativeModel('gemini-1.5-flash')
             
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # Gabungkan instruksi langsung di sini
+            instruksi_lengkap = (
+                "Kamu adalah asisten resmi Kabupaten Pesisir Barat, Lampung. "
+                "Berikan informasi tentang wisata seperti Pantai Tanjung Setia, Pulau Pisang, "
+                "dan budaya lokal dengan ramah. Slogan: Negeri Para Sai Batin dan Para Ulama. "
+                f"Pertanyaan user: {prompt}"
+            )
+            
+            response = model.generate_content(instruksi_lengkap)
+            
+            if response.text:
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            else:
+                st.warning("AI tidak memberikan jawaban, coba tanya lagi ya.")
+                
         except Exception as e:
-            st.error("Waduh, koneksi ke server pusat sedang sibuk. Coba sebentar lagi ya!")
+            # Menampilkan error asli supaya kita tahu masalahnya apa
+            st.error(f"Maaf, ada gangguan teknis kecil: {str(e)}")
