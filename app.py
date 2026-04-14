@@ -4,7 +4,7 @@ import google.generativeai as genai
 st.set_page_config(page_title="Asisten Digital Pesisir Barat", page_icon="🌊")
 st.title("🌊 Asisten Digital Pesisir Barat")
 
-# Masukkan API KEY baru kamu di sini
+# Masukkan API KEY kamu di sini
 API_KEY = "AIzaSyD7utq2kgVR2yZioUm0RVC0ZBjvNsj5yLE" 
 genai.configure(api_key=API_KEY)
 
@@ -22,11 +22,15 @@ if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
 
     with st.chat_message("assistant"):
         try:
-            # Gunakan nama model tanpa awalan 'models/'
-            model = genai.GenerativeModel('gemini-pro')
+            # JURUS PAMUNGKAS: Cari model yang tersedia secara otomatis
+            available_models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
+            # Pilih model pertama yang ketemu (biasanya gemini-1.5-flash atau gemini-pro)
+            model_to_use = available_models[0] if available_models else "gemini-1.5-flash"
+            
+            model = genai.GenerativeModel(model_to_use)
             response = model.generate_content(f"Kamu adalah asisten Pesisir Barat. Jawab: {prompt}")
             
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
         except Exception as e:
-            st.error(f"Error: {str(e)}")
+            st.error(f"Sistem sedang sinkronisasi. Error: {str(e)}")
