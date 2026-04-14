@@ -28,7 +28,7 @@ if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
     with st.chat_message("assistant"):
         try:
             # Kita pakai cara yang lebih stabil
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-pro')
             
             # Gabungkan instruksi langsung di sini
             instruksi_lengkap = (
