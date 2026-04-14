@@ -1,39 +1,33 @@
 import streamlit as st
 import google.generativeai as genai
-import os
 
-st.set_page_config(page_title="Asisten Digital Pesisir Barat", page_icon="🌊")
-st.title("🌊 Asisten Digital Pesisir Barat")
+st.title("🌊 KruiBot")
 
-# Ambil API Key dari Secrets (Saran saya tetap pakai Secrets agar aman)
+# Ambil API Key (Pastikan sudah terisi di menu Secrets!)
 try:
-    API_KEY = st.secrets["GOOGLE_API_KEY"]
-    # Paksa konfigurasi menggunakan API version 'v1'
-    genai.configure(api_key=API_KEY)
+    genai.configure(api_key=st.secrets["GOOGLE_API_KEY"])
+    
+    # KITA PAKAI MODEL 'gemini-pro' KARENA PALING STABIL DI SEMUA VERSI
+    model = genai.GenerativeModel('gemini-pro')
+
+    if "chat_history" not in st.session_state:
+        st.session_state.chat_history = []
+
+    for content in st.session_state.chat_history:
+        with st.chat_message(content["role"]):
+            st.markdown(content["text"])
+
+    if prompt := st.chat_input("Tanya apa saja..."):
+        st.session_state.chat_history.append({"role": "user", "text": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        response = model.generate_content(prompt)
+        
+        with st.chat_message("assistant"):
+            st.markdown(response.text)
+            st.session_state.chat_history.append({"role": "assistant", "text": response.text})
+
 except Exception as e:
-    st.error("API Key belum terpasang di Secrets!")
-
-if "messages" not in st.session_state:
-    st.session_state.messages = []
-
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        st.markdown(message["content"])
-
-if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
-    st.session_state.messages.append({"role": "user", "content": prompt})
-    with st.chat_message("user"):
-        st.markdown(prompt)
-
-    with st.chat_message("assistant"):
-        try:
-            # Gunakan penamaan model yang paling lengkap
-            model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
-            
-            response = model.generate_content(f"Kamu asisten Pesisir Barat. Jawab: {prompt}")
-            
-            if response.text:
-                st.markdown(response.text)
-                st.session_state.messages.append({"role": "assistant", "content": response.text})
-        except Exception as e:
-            st.error(f"Masih ada kendala teknis: {str(e)}")
+    st.error(f"Pesan sistem: {str(e)}")
+    st.info("Tips: Pastikan GOOGLE_API_KEY sudah benar di menu Settings > Secrets.")
