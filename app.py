@@ -6,11 +6,11 @@ st.set_page_config(page_title="Asisten Digital Pesisir Barat", page_icon="🌊")
 st.title("🌊 Asisten Digital Pesisir Barat")
 st.markdown("---")
 
-# 2. Setup API
-API_KEY = "AIzaSyD7utq2kgVR2yZioUm0RVC0ZBjvNsj5yLE"
+# 2. Setup API - Pastikan API KEY baru kamu sudah benar di sini
+API_KEY = "MASUKKAN_API_KEY_BARU_KAMU_DI_SINI"
 genai.configure(api_key=API_KEY)
 
-# 3. Inisialisasi Model & Riwayat Chat
+# 3. Inisialisasi Riwayat Chat
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -27,25 +27,21 @@ if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
 
     with st.chat_message("assistant"):
         try:
-            # Kita pakai cara yang lebih stabil
-            model = genai.GenerativeModel('gemini-pro')
+            # MENGGUNAKAN NAMA MODEL VERSI LENGKAP AGAR TIDAK 404
+            model = genai.GenerativeModel(model_name="models/gemini-1.5-flash")
             
-            # Gabungkan instruksi langsung di sini
-            instruksi_lengkap = (
+            instruksi = (
                 "Kamu adalah asisten resmi Kabupaten Pesisir Barat, Lampung. "
-                "Berikan informasi tentang wisata seperti Pantai Tanjung Setia, Pulau Pisang, "
-                "dan budaya lokal dengan ramah. Slogan: Negeri Para Sai Batin dan Para Ulama. "
-                f"Pertanyaan user: {prompt}"
+                "Jawablah dengan ramah dan informatif. "
+                f"Pertanyaan: {prompt}"
             )
             
-            response = model.generate_content(instruksi_lengkap)
+            response = model.generate_content(instruksi)
             
             if response.text:
                 st.markdown(response.text)
                 st.session_state.messages.append({"role": "assistant", "content": response.text})
-            else:
-                st.warning("AI tidak memberikan jawaban, coba tanya lagi ya.")
                 
         except Exception as e:
-            # Menampilkan error asli supaya kita tahu masalahnya apa
-            st.error(f"Maaf, ada gangguan teknis kecil: {str(e)}")
+            # Jika masih error, kita tampilkan detailnya untuk analisa
+            st.error(f"Catatan sistem: {str(e)}")
