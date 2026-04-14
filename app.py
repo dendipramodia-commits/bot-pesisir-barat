@@ -16,40 +16,38 @@ st.title("🌊 KruiBot")
 st.caption("Negeri Para Sai Batin dan Para Ulama")
 
 try:
+    # 1. Pastikan API Key benar
     API_KEY = st.secrets["GOOGLE_API_KEY"]
     genai.configure(api_key=API_KEY)
 
-    # --- JURUS DETEKSI OTOMATIS ---
-    if "active_model" not in st.session_state:
-        # Mencari model yang tersedia di API Key kamu
-        models = [m.name for m in genai.list_models() if 'generateContent' in m.supported_generation_methods]
-        # Pilih yang paling canggih (biasanya urutan pertama atau kedua)
-        if models:
-            st.session_state.active_model = models[0]
-        else:
-            st.session_state.active_model = "models/gemini-1.5-flash"
-
-    model = genai.GenerativeModel(st.session_state.active_model)
+    # 2. PAKSA pakai Gemini 1.5 Flash (Kuota lebih banyak)
+    model = genai.GenerativeModel('gemini-1.5-flash')
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
+    # Tampilkan chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
+    # Input User
     if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
         st.session_state.messages.append({"role": "user", "content": prompt})
         with st.chat_message("user"):
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            # Tambahkan instruksi lokal
-            instruksi = f"Kamu adalah KruiBot, asisten Pesisir Barat yang ramah. Jawab dengan sopan: {prompt}"
+            # Tambahkan instruksi agar bot ramah
+            instruksi = f"Kamu adalah KruiBot, asisten ramah ahli Pesisir Barat. Jawab dengan sopan: {prompt}"
             response = model.generate_content(instruksi)
             
             st.markdown(response.text)
             st.session_state.messages.append({"role": "assistant", "content": response.text})
 
 except Exception as e:
-    st.error(f"Koneksi sedang disesuaikan. Silakan refresh halaman. (Detail: {str(e)})")
+    error_msg = str(e)
+    if "429" in error_msg:
+        st.warning("⚠️ Server Google sedang sibuk (limit tercapai). Tunggu 10 detik lalu coba lagi ya!")
+    else:
+        st.error(f"Ada kendala: {error_msg}")
