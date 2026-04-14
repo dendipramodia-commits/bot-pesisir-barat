@@ -1,5 +1,6 @@
 import streamlit as st
 import google.generativeai as genai
+from google.api_core import client_options
 
 st.set_page_config(page_title="KruiBot - Pesisir Barat", page_icon="🌊")
 
@@ -16,17 +17,20 @@ st.title("🌊 KruiBot")
 st.caption("Negeri Para Sai Batin dan Para Ulama")
 
 try:
-    # 1. Pastikan API Key benar
+    # 1. Ambil API Key
     API_KEY = st.secrets["GOOGLE_API_KEY"]
-    genai.configure(api_key=API_KEY)
+    
+    # 2. PAKSA MENGGUNAKAN API VERSION V1 (Menghindari 404 v1beta)
+    options = client_options.ClientOptions(api_endpoint="generativelanguage.googleapis.com")
+    genai.configure(api_key=API_KEY, client_options=options)
 
-    # 2. PAKSA pakai Gemini 1.5 Flash (Kuota lebih banyak)
+    # 3. Pakai model 1.5 Flash
     model = genai.GenerativeModel('gemini-1.5-flash')
 
     if "messages" not in st.session_state:
         st.session_state.messages = []
 
-    # Tampilkan chat
+    # Tampilkan riwayat chat
     for message in st.session_state.messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
@@ -38,16 +42,19 @@ try:
             st.markdown(prompt)
 
         with st.chat_message("assistant"):
-            # Tambahkan instruksi agar bot ramah
+            # Tambahkan instruksi kepribadian
             instruksi = f"Kamu adalah KruiBot, asisten ramah ahli Pesisir Barat. Jawab dengan sopan: {prompt}"
-            response = model.generate_content(instruksi)
             
-            st.markdown(response.text)
-            st.session_state.messages.append({"role": "assistant", "content": response.text})
+            # Eksekusi dengan penanganan error quota (429)
+            try:
+                response = model.generate_content(instruksi)
+                st.markdown(response.text)
+                st.session_state.messages.append({"role": "assistant", "content": response.text})
+            except Exception as e:
+                if "429" in str(e):
+                    st.warning("⚠️ Antrean penuh. Tunggu 10 detik dan coba lagi ya!")
+                else:
+                    st.error(f"Terjadi kesalahan saat menjawab: {str(e)}")
 
 except Exception as e:
-    error_msg = str(e)
-    if "429" in error_msg:
-        st.warning("⚠️ Server Google sedang sibuk (limit tercapai). Tunggu 10 detik lalu coba lagi ya!")
-    else:
-        st.error(f"Ada kendala: {error_msg}")
+    st.error(f"Gagal menghubungkan ke server Google: {str(e)}")
