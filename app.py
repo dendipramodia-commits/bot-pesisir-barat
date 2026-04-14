@@ -23,7 +23,7 @@ if prompt := st.chat_input("Tanya seputar Pesisir Barat..."):
     with st.chat_message("assistant"):
         try:
             # Gunakan nama model tanpa awalan 'models/'
-            model = genai.GenerativeModel('gemini-1.5-flash')
+            model = genai.GenerativeModel('gemini-pro')
             response = model.generate_content(f"Kamu adalah asisten Pesisir Barat. Jawab: {prompt}")
             
             st.markdown(response.text)
