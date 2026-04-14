@@ -7,7 +7,7 @@ st.title("🌊 Asisten Digital Pesisir Barat")
 st.markdown("---")
 
 # 2. Setup API - Pastikan API KEY baru kamu sudah benar di sini
-API_KEY = "MASUKKAN_API_KEY_BARU_KAMU_DI_SINI"
+API_KEY = "AIzaSyD7utq2kgVR2yZioUm0RVC0ZBjvNsj5yLE"
 genai.configure(api_key=API_KEY)
 
 # 3. Inisialisasi Riwayat Chat
